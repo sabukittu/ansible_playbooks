@@ -1,0 +1,44 @@
+---
+  - name: "Play "
+    hosts: localhost
+    gather_facts: true
+    connection: local
+    user: centos 
+    task: 
+
+      - name: "ECS Cluster Creation"
+        ecs_cluster:
+          name: MyClusterECS
+          state: present
+          region: ap-south-1
+
+      - name: "Launch Configuration"
+        ec2_lc:
+          name: EC2LaunchConfigForECS
+          image_id: ami-0cf953afde70921a2
+          instance_profile_name: arn:aws:iam::385504993067:instance-profile/ecsInstanceRole
+          key_name: ssh_key
+          security_groups: sg-0bd6469705bbe6ed2
+          instance_type: t2.micro
+          region: ap-south-1
+          user_data: |
+                      #!/bin/bash
+                      echo ECS_CLUSTER=MyClusterECS >> /etc/ecs/ecs.config
+                      echo ECS_BACKEND_HOST= >> /etc/ecs/ecs.config
+          volumes:
+          - device_name: /dev/xvdcz
+            volume_size: 22
+            volume_type: gp2
+            delete_on_termination: true
+      
+      - name: "Auto Scaling Group"
+        ec2_asg:
+          name: EC2AutoScalingGroupForECS
+          launch_config_name: EC2LaunchConfigForECS 
+          health_check_period: 60
+          health_check_type: EC2
+          replace_all_instances: yes
+          min_size: 1
+          max_size: 1
+          desired_capacity: 1
+          region: ap-south-1
