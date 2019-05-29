@@ -1,0 +1,31 @@
+---
+  - name: "User Creation On App Server"
+    hosts: all
+    gather_facts: False
+    tasks:
+     - name: "Useradd Script"
+       become: True
+       user:
+         name: sabu001
+         comment: Kittu Sabu
+         uid: 1336
+         group: cloudops
+         state: present
+      
+     - name: "Create a directory .ssh"
+       become: True
+       file:
+         path: /home/sabu001/.ssh
+         state: directory
+         owner: sabu001
+         group: cloudops
+         mode: '0700'
+      
+     - name: "Copy authorized_keys file"
+       become: True
+       copy:
+         src: files/authorized_keys
+         dest: /home/sabu001/.ssh/authorized_keys
+         owner: sabu001
+         group: cloudops
+         mode: '0600'
